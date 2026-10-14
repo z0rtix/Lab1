@@ -2,6 +2,7 @@
 #include "benchmark.hpp"
 #include "menu.hpp"
 
+
 int main() {
     runAllTests();
     runBenchmark();

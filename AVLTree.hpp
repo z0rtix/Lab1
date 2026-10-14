@@ -193,9 +193,7 @@ class AVLTree {
             if (!t1 || !t2) {
                 return false;
             }
-            return !(t1->value < t2->value) && !(t2->value < t1->value) &&
-                areEqualTrees(t1->left, t2->left) &&
-                areEqualTrees(t1->right, t2->right);
+            return !(t1->value < t2->value) && !(t2->value < t1->value) && areEqualTrees(t1->left, t2->left) && areEqualTrees(t1->right, t2->right);
         }
 
         bool isSubtree(Node* treeNode, Node* subRoot) const noexcept {
@@ -490,5 +488,6 @@ class AVLTree {
             printTreeHelper(root->left, out, "", true);
         }
 };
+
 
 #endif

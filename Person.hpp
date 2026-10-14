@@ -22,71 +22,71 @@ struct PersonID {
 };
 
 class Student {
-private:
-    PersonID id;
-    std::string firstName;
-    std::string lastName;
-    double gpa;
+    private:
+        PersonID id;
+        std::string firstName;
+        std::string lastName;
+        double gpa;
 
-public:
-    Student() : id{0, 0}, firstName(""), lastName(""), gpa(0.0) {}
+    public:
+        Student() : id{0, 0}, firstName(""), lastName(""), gpa(0.0) {}
 
-    Student(PersonID personId, std::string first, std::string last, double studentGpa)
-        : id(personId), firstName(std::move(first)), lastName(std::move(last)), gpa(studentGpa) {}
+        Student(PersonID personId, std::string first, std::string last, double studentGpa)
+            : id(personId), firstName(std::move(first)), lastName(std::move(last)), gpa(studentGpa) {}
 
-    PersonID getID() const noexcept {
-        return id;
-    }
+        PersonID getID() const noexcept {
+            return id;
+        }
 
-    const std::string& getFirstName() const noexcept {
-        return firstName;
-    }
+        const std::string& getFirstName() const noexcept {
+            return firstName;
+        }
 
-    const std::string& getLastName() const noexcept {
-        return lastName;
-    }
+        const std::string& getLastName() const noexcept {
+            return lastName;
+        }
 
-    double getGPA() const noexcept {
-        return gpa;
-    }
+        double getGPA() const noexcept {
+            return gpa;
+        }
 
-    bool operator<(const Student& other) const noexcept {
-        return id < other.id;
-    }
+        bool operator<(const Student& other) const noexcept {
+            return id < other.id;
+        }
 
-    friend std::ostream& operator<<(std::ostream& os, const Student& s) {
-        os << "[" << s.id.series << "-" << s.id.number << "] " 
-           << s.lastName << " " << s.firstName << " (GPA: " << s.gpa << ")";
-        return os;
-    }
+        friend std::ostream& operator<<(std::ostream& os, const Student& s) {
+            os << "[" << s.id.series << "-" << s.id.number << "] " 
+            << s.lastName << " " << s.firstName << " (GPA: " << s.gpa << ")";
+            return os;
+        }
 };
 
 class Teacher {
-private:
-    PersonID id;
-    std::string firstName;
-    std::string lastName;
-    std::string department;
+    private:
+        PersonID id;
+        std::string firstName;
+        std::string lastName;
+        std::string department;
 
-public:
-    Teacher() : id{0, 0}, firstName(""), lastName(""), department("") {}
+    public:
+        Teacher() : id{0, 0}, firstName(""), lastName(""), department("") {}
 
-    Teacher(PersonID personId, std::string first, std::string last, std::string dept)
-        : id(personId), firstName(std::move(first)), lastName(std::move(last)), department(std::move(dept)) {}
+        Teacher(PersonID personId, std::string first, std::string last, std::string dept)
+            : id(personId), firstName(std::move(first)), lastName(std::move(last)), department(std::move(dept)) {}
 
-    PersonID getID() const noexcept {
-        return id;
-    }
+        PersonID getID() const noexcept {
+            return id;
+        }
 
-    bool operator<(const Teacher& other) const noexcept {
-        return id < other.id;
-    }
+        bool operator<(const Teacher& other) const noexcept {
+            return id < other.id;
+        }
 
-    friend std::ostream& operator<<(std::ostream& os, const Teacher& t) {
-        os << "[" << t.id.series << "-" << t.id.number << "] " 
-           << t.lastName << " " << t.firstName << " (" << t.department << ")";
-        return os;
-    }
+        friend std::ostream& operator<<(std::ostream& os, const Teacher& t) {
+            os << "[" << t.id.series << "-" << t.id.number << "] " 
+            << t.lastName << " " << t.firstName << " (" << t.department << ")";
+            return os;
+        }
 };
 
 
