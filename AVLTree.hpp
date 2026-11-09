@@ -1,11 +1,9 @@
 #ifndef AVL_TREE_HPP
 #define AVL_TREE_HPP
 
-#include <cstddef>
-#include <utility>
-#include <string>
-#include <sstream>
+#include <iostream>
 #include <stdexcept>
+#include <utility>
 
 
 template <typename T>
@@ -18,21 +16,21 @@ class AVLTree {
             int height;
 
             Node(const T& val) : value(val), left(nullptr), right(nullptr), height(1) {}
-            Node(T&& val) noexcept : value(std::move(val)), left(nullptr), right(nullptr), height(1) {}
+            Node(T&& val) : value(std::move(val)), left(nullptr), right(nullptr), height(1) {}
         };
 
         Node* root;
         size_t treeSize;
 
-        int getHeight(Node* node) const noexcept {
+        int getHeight(Node* node) const {
             return node ? node->height : 0;
         }
 
-        int getBalanceFactor(Node* node) const noexcept {
+        int getBalanceFactor(Node* node) const {
             return node ? (getHeight(node->right) - getHeight(node->left)) : 0;
         }
 
-        void updateHeight(Node* node) noexcept {
+        void updateHeight(Node* node) {
             if (node) {
                 int leftH = getHeight(node->left);
                 int rightH = getHeight(node->right);
@@ -40,7 +38,7 @@ class AVLTree {
             }
         }
 
-        Node* rotateRight(Node* y) noexcept {
+        Node* rotateRight(Node* y) {
             Node* x = y->left;
             Node* t2 = x->right;
 
@@ -53,12 +51,12 @@ class AVLTree {
             return x;
         }
 
-        Node* rotateLeft(Node* x) noexcept {
+        Node* rotateLeft(Node* x) {
             Node* y = x->right;
             Node* t2 = y->left;
 
             y->left = x;
-            x->right = t2;
+            y->right = t2;
 
             updateHeight(x);
             updateHeight(y);
@@ -66,10 +64,8 @@ class AVLTree {
             return y;
         }
 
-        Node* balance(Node* node) noexcept {
-            if (!node) {
-                return nullptr;
-            }
+        Node* balance(Node* node) {
+            if (!node) return nullptr;
 
             updateHeight(node);
             int bf = getBalanceFactor(node);
@@ -96,7 +92,6 @@ class AVLTree {
                 inserted = true;
                 return new Node(val);
             }
-
             if (val < node->value) {
                 node->left = insertNode(node->left, val, inserted);
             } else if (node->value < val) {
@@ -105,11 +100,26 @@ class AVLTree {
                 inserted = false;
                 return node;
             }
-
             return balance(node);
         }
 
-        Node* findMin(Node* node) noexcept {
+        Node* insertNodeMove(Node* node, T&& val, bool& inserted) {
+            if (!node) {
+                inserted = true;
+                return new Node(std::move(val));
+            }
+            if (val < node->value) {
+                node->left = insertNodeMove(node->left, std::move(val), inserted);
+            } else if (node->value < val) {
+                node->right = insertNodeMove(node->right, std::move(val), inserted);
+            } else {
+                inserted = false;
+                return node;
+            }
+            return balance(node);
+        }
+
+        Node* findMin(Node* node) const {
             while (node && node->left) {
                 node = node->left;
             }
@@ -117,9 +127,7 @@ class AVLTree {
         }
 
         Node* removeMin(Node* node) {
-            if (!node->left) {
-                return node->right;
-            }
+            if (!node->left) return node->right;
             node->left = removeMin(node->left);
             return balance(node);
         }
@@ -140,23 +148,18 @@ class AVLTree {
                 Node* rightChild = node->right;
                 delete node;
 
-                if (!rightChild) {
-                    return leftChild;
-                }
+                if (!rightChild) return leftChild;
 
                 Node* min = findMin(rightChild);
                 min->right = removeMin(rightChild);
                 min->left = leftChild;
                 return balance(min);
             }
-
             return balance(node);
         }
 
-        Node* copyTree(Node* node) {
-            if (!node) {
-                return nullptr;
-            }
+        Node* copyTree(Node* node) const {
+            if (!node) return nullptr;
             Node* newNode = new Node(node->value);
             newNode->height = node->height;
             newNode->left = copyTree(node->left);
@@ -164,7 +167,7 @@ class AVLTree {
             return newNode;
         }
 
-        void destroyTree(Node* node) noexcept {
+        void destroyTree(Node* node) {
             if (node) {
                 destroyTree(node->left);
                 destroyTree(node->right);
@@ -172,147 +175,89 @@ class AVLTree {
             }
         }
 
-        Node* findNode(Node* node, const T& val) const noexcept {
+        Node* findNode(Node* node, const T& val) const {
             Node* curr = node;
             while (curr) {
-                if (val < curr->value) {
-                    curr = curr->left;
-                } else if (curr->value < val) {
-                    curr = curr->right;
-                } else {
-                    return curr;
-                }
+                if (val < curr->value) curr = curr->left;
+                else if (curr->value < val) curr = curr->right;
+                else return curr;
             }
             return nullptr;
         }
 
-        bool areEqualTrees(Node* t1, Node* t2) const noexcept {
-            if (!t1 && !t2) {
-                return true;
-            }
-            if (!t1 || !t2) {
-                return false;
-            }
-            return !(t1->value < t2->value) && !(t2->value < t1->value) && areEqualTrees(t1->left, t2->left) && areEqualTrees(t1->right, t2->right);
+        bool areEqualTrees(Node* t1, Node* t2) const {
+            if (!t1 && !t2) return true;
+            if (!t1 || !t2) return false;
+            return !(t1->value < t2->value) && !(t2->value < t1->value) &&
+                areEqualTrees(t1->left, t2->left) &&
+                areEqualTrees(t1->right, t2->right);
         }
 
-        bool isSubtree(Node* treeNode, Node* subRoot) const noexcept {
-            if (!subRoot) {
-                return true;
-            }
-            if (!treeNode) {
-                return false;
-            }
-            if (areEqualTrees(treeNode, subRoot)) {
-                return true;
-            }
+        bool isSubtree(Node* treeNode, Node* subRoot) const {
+            if (!subRoot) return true;
+            if (!treeNode) return false;
+            if (areEqualTrees(treeNode, subRoot)) return true;
             return isSubtree(treeNode->left, subRoot) || isSubtree(treeNode->right, subRoot);
         }
 
-        template <typename F>
-        void traverseKLP(Node* node, F&& callback) const {
-            if (!node) {
-                return;
-            }
+        template <typename Func>
+        void traverseKLP(Node* node, Func callback) const {
+            if (!node) return;
             callback(node->value);
             traverseKLP(node->left, callback);
             traverseKLP(node->right, callback);
         }
 
-        template <typename F>
-        void traverseKPL(Node* node, F&& callback) const {
-            if (!node) {
-                return;
-            }
+        template <typename Func>
+        void traverseKPL(Node* node, Func callback) const {
+            if (!node) return;
             callback(node->value);
             traverseKPL(node->right, callback);
             traverseKPL(node->left, callback);
         }
 
-        template <typename F>
-        void traverseLKP(Node* node, F&& callback) const {
-            if (!node) {
-                return;
-            }
+        template <typename Func>
+        void traverseLKP(Node* node, Func callback) const {
+            if (!node) return;
             traverseLKP(node->left, callback);
             callback(node->value);
             traverseLKP(node->right, callback);
         }
 
-        template <typename F>
-        void traverseLPK(Node* node, F&& callback) const {
-            if (!node) {
-                return;
-            }
+        template <typename Func>
+        void traverseLPK(Node* node, Func callback) const {
+            if (!node) return;
             traverseLPK(node->left, callback);
             traverseLPK(node->right, callback);
             callback(node->value);
         }
 
-        template <typename F>
-        void traversePLK(Node* node, F&& callback) const {
-            if (!node) {
-                return;
-            }
+        template <typename Func>
+        void traversePLK(Node* node, Func callback) const {
+            if (!node) return;
             traversePLK(node->right, callback);
             traversePLK(node->left, callback);
             callback(node->value);
         }
 
-        template <typename F>
-        void traversePKL(Node* node, F&& callback) const {
-            if (!node) {
-                return;
-            }
+        template <typename Func>
+        void traversePKL(Node* node, Func callback) const {
+            if (!node) return;
             traversePKL(node->right, callback);
             callback(node->value);
             traversePKL(node->left, callback);
         }
 
-        void serializeHelper(Node* node, std::ostringstream& oss) const {
-            if (!node) {
-                oss << "# ";
-                return;
-            }
-            oss << node->value << " ";
-            serializeHelper(node->left, oss);
-            serializeHelper(node->right, oss);
-        }
-
-        Node* deserializeHelper(std::istringstream& iss) {
-            std::string token;
-            if (!(iss >> token) || token == "#") {
-                return nullptr;
-            }
-
-            std::istringstream valStream(token);
-            T val;
-            valStream >> val;
-
-            Node* node = new Node(val);
-            node->left = deserializeHelper(iss);
-            node->right = deserializeHelper(iss);
-            updateHeight(node);
-            return node;
-        }
-
-        template <typename Stream>
-        void printTreeHelper(Node* node, Stream& out, const std::string& prefix, bool isLeft) const {
-            if (!node) {
-                return;
-            }
-
-            printTreeHelper(node->right, out, prefix + (isLeft ? "│   " : "    "), false);
-
-            out << prefix;
-            out << (isLeft ? "└── " : "┌── ");
-            out << node->value << " (h:" << node->height << ")\n";
-
-            printTreeHelper(node->left, out, prefix + (isLeft ? "│   " : "    "), true);
+        void printHelper(Node* node, int indent) const {
+            if (!node) return;
+            printHelper(node->right, indent + 4);
+            for (int i = 0; i < indent; i++) std::cout << " ";
+            std::cout << node->value << "\n";
+            printHelper(node->left, indent + 4);
         }
 
     public:
-        AVLTree() noexcept : root(nullptr), treeSize(0) {}
+        AVLTree() : root(nullptr), treeSize(0) {}
 
         AVLTree(const AVLTree& other) : root(copyTree(other.root)), treeSize(other.treeSize) {}
 
@@ -341,103 +286,89 @@ class AVLTree {
             return *this;
         }
 
-        ~AVLTree() noexcept {
+        ~AVLTree() {
             clear();
         }
 
         bool insert(const T& val) {
             bool inserted = false;
             root = insertNode(root, val, inserted);
-            if (inserted) {
-                treeSize++;
-            }
+            if (inserted) treeSize++;
+            return inserted;
+        }
+
+        bool insert(T&& val) {
+            bool inserted = false;
+            root = insertNodeMove(root, std::move(val), inserted);
+            if (inserted) treeSize++;
             return inserted;
         }
 
         bool remove(const T& val) {
             bool removed = false;
             root = removeNode(root, val, removed);
-            if (removed) {
-                treeSize--;
-            }
+            if (removed) treeSize--;
             return removed;
         }
 
-        bool contains(const T& val) const noexcept {
+        bool contains(const T& val) const {
             return findNode(root, val) != nullptr;
         }
 
-        size_t size() const noexcept {
+        size_t size() const {
             return treeSize;
         }
 
-        bool empty() const noexcept {
+        bool empty() const {
             return treeSize == 0;
         }
 
-        void clear() noexcept {
+        void clear() {
             destroyTree(root);
             root = nullptr;
             treeSize = 0;
         }
 
-        template <typename F>
-        void forEachKLP(F&& callback) const {
-            traverseKLP(root, callback);
-        }
+        template <typename Func>
+        void forEachKLP(Func callback) const { traverseKLP(root, callback); }
 
-        template <typename F>
-        void forEachKPL(F&& callback) const {
-            traverseKPL(root, callback);
-        }
+        template <typename Func>
+        void forEachKPL(Func callback) const { traverseKPL(root, callback); }
 
-        template <typename F>
-        void forEachLKP(F&& callback) const {
-            traverseLKP(root, callback);
-        }
+        template <typename Func>
+        void forEachLKP(Func callback) const { traverseLKP(root, callback); }
 
-        template <typename F>
-        void forEachLPK(F&& callback) const {
-            traverseLPK(root, callback);
-        }
+        template <typename Func>
+        void forEachLPK(Func callback) const { traverseLPK(root, callback); }
 
-        template <typename F>
-        void forEachPLK(F&& callback) const {
-            traversePLK(root, callback);
-        }
+        template <typename Func>
+        void forEachPLK(Func callback) const { traversePLK(root, callback); }
 
-        template <typename F>
-        void forEachPKL(F&& callback) const {
-            traversePKL(root, callback);
-        }
+        template <typename Func>
+        void forEachPKL(Func callback) const { traversePKL(root, callback); }
 
-        template <typename F>
-        auto map(F&& func) const {
-            if (!root) {
-                throw std::runtime_error("Cannot call map on an empty tree");
-            }
-            using ReturnType = decltype(func(root->value));
-            AVLTree<ReturnType> result;
+        template <typename Func>
+        AVLTree<T> map(Func func) const {
+            if (!root) throw std::runtime_error("Empty tree");
+            AVLTree<T> result;
             traverseLKP(root, [&](const T& val) {
                 result.insert(func(val));
             });
             return result;
         }
 
-        template <typename Predicate>
-        AVLTree<T> where(Predicate&& pred) const {
+        template <typename Func>
+        AVLTree<T> where(Func pred) const {
             AVLTree<T> result;
             traverseLKP(root, [&](const T& val) {
-                if (pred(val)) {
-                    result.insert(val);
-                }
+                if (pred(val)) result.insert(val);
             });
             return result;
         }
 
-        template <typename F, typename Accum>
-        Accum reduce(F&& func, Accum startVal) const {
-            Accum acc = startVal;
+        template <typename Func>
+        T reduce(Func func, T startVal) const {
+            T acc = startVal;
             traverseLKP(root, [&](const T& val) {
                 acc = func(val, acc);
             });
@@ -446,46 +377,25 @@ class AVLTree {
 
         AVLTree<T> extractSubtree(const T& val) const {
             Node* sub = findNode(root, val);
-            if (!sub) {
-                throw std::invalid_argument("Element not found in tree");
-            }
-
+            if (!sub) throw std::invalid_argument("Element not found");
             AVLTree<T> result;
-            result.root = result.copyTree(sub);
+            result.root = copyTree(sub);
             result.traverseLKP(result.root, [&](const T&) {
                 result.treeSize++;
             });
             return result;
         }
 
-        bool containsSubtree(const AVLTree<T>& sub) const noexcept {
+        bool containsSubtree(const AVLTree<T>& sub) const {
             return isSubtree(root, sub.root);
         }
 
-        std::string serialize() const {
-            std::ostringstream oss;
-            serializeHelper(root, oss);
-            return oss.str();
-        }
-
-        void deserialize(const std::string& data) {
-            clear();
-            std::istringstream iss(data);
-            root = deserializeHelper(iss);
-            traverseLKP(root, [&](const T&) {
-                treeSize++;
-            });
-        }
-
-        template <typename Stream>
-        void print(Stream& out) const {
+        void print() const {
             if (!root) {
-                out << "[Empty tree]\n";
+                std::cout << "[Empty]\n";
                 return;
             }
-            printTreeHelper(root->right, out, "", false);
-            out << root->value << " (h:" << root->height << ")\n";
-            printTreeHelper(root->left, out, "", true);
+            printHelper(root, 0);
         }
 };
 
