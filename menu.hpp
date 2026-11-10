@@ -2,7 +2,7 @@
 #define MENU_HPP
 
 
-void runInteractiveMenu();
+void runMenu();
 
 
 #endif

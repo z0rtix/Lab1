@@ -5,8 +5,7 @@
 
 int main() {
     runAllTests();
-    runBenchmark();
-    runInteractiveMenu();
+    runMenu();
 
     return 0;
 }

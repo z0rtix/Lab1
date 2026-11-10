@@ -2,7 +2,7 @@
 #define BENCHMARK_HPP
 
 
-void runBenchmark();
+void runBenchmarks();
 
 
 #endif

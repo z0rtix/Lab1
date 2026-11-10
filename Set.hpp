@@ -3,93 +3,107 @@
 
 #include "AVLTree.hpp"
 
+#include <utility>
+
 
 template <typename T>
 class Set {
-    private:
-        AVLTree<T> tree;
+	private:
+		AVLTree<T> tree;
 
-    public:
-        Set() = default;
+	public:
+		Set() noexcept : tree() {}
 
-        bool insert(const T& val) {
-            return tree.insert(val);
-        }
+		Set(const Set& other) : tree(other.tree) {}
 
-        bool remove(const T& val) {
-            return tree.remove(val);
-        }
+		Set(Set&& other) noexcept : tree(std::move(other.tree)) {}
 
-        bool contains(const T& val) const noexcept {
-            return tree.contains(val);
-        }
+		Set& operator=(const Set& other) {
+			if (this != &other) {
+				tree = other.tree;
+			}
+			return *this;
+		}
 
-        size_t size() const noexcept {
-            return tree.size();
-        }
+		Set& operator=(Set&& other) noexcept {
+			if (this != &other) {
+				tree = std::move(other.tree);
+			}
+			return *this;
+		}
 
-        bool empty() const noexcept {
-            return tree.empty();
-        }
+		~Set() noexcept = default;
 
-        void clear() noexcept {
-            tree.clear();
-        }
+		bool insert(const T& val) {
+			return tree.insert(val);
+		}
 
-        template <typename F>
-        void forEach(F&& callback) const {
-            tree.forEachLKP(callback);
-        }
+		bool insert(T&& val) {
+			return tree.insert(std::move(val));
+		}
 
-        Set<T> unionWith(const Set<T>& other) const {
-            Set<T> result = *this;
-            other.forEach([&](const T& val) {
-                result.insert(val);
-            });
-            return result;
-        }
+		bool remove(const T& val) {
+			return tree.remove(val);
+		}
 
-        Set<T> intersectWith(const Set<T>& other) const {
-            Set<T> result;
-            forEach([&](const T& val) {
-                if (other.contains(val)) {
-                    result.insert(val);
-                }
-            });
-            return result;
-        }
+		bool contains(const T& val) const noexcept {
+			return tree.contains(val);
+		}
 
-        Set<T> differenceWith(const Set<T>& other) const {
-            Set<T> result;
-            forEach([&](const T& val) {
-                if (!other.contains(val)) {
-                    result.insert(val);
-                }
-            });
-            return result;
-        }
+		size_t size() const noexcept {
+			return tree.size();
+		}
 
-        bool isSubsetOf(const Set<T>& other) const {
-            bool subset = true;
-            forEach([&](const T& val) {
-                if (!other.contains(val)) {
-                    subset = false;
-                }
-            });
-            return subset;
-        }
+		bool empty() const noexcept {
+			return tree.empty();
+		}
 
-        bool operator==(const Set<T>& other) const {
-            if (size() != other.size()) {
-                return false;
-            }
-            return isSubsetOf(other);
-        }
+		void clear() noexcept {
+			tree.clear();
+		}
 
-        template <typename Stream>
-        void print(Stream& out) const {
-            tree.print(out);
-        }
+		Set<T> unionWith(const Set<T>& other) const {
+			Set<T> result = *this;
+			other.tree.forEachLKP([&](const T& item) {
+				result.insert(item);
+			});
+			return result;
+		}
+
+		Set<T> intersectWith(const Set<T>& other) const {
+			Set<T> result;
+			tree.forEachLKP([&](const T& item) {
+				if (other.contains(item)) {
+					result.insert(item);
+				}
+			});
+			return result;
+		}
+
+		Set<T> differenceWith(const Set<T>& other) const {
+			Set<T> result;
+			tree.forEachLKP([&](const T& item) {
+				if (!other.contains(item)) {
+					result.insert(item);
+				}
+			});
+			return result;
+		}
+
+		bool isSubsetOf(const Set<T>& other) const noexcept {
+			bool isSub = true;
+			tree.forEachLKP([&](const T& item) {
+				if (!other.contains(item)) {
+					isSub = false;
+				}
+			});
+			return isSub;
+		}
+
+		template <typename Func>
+		void forEach(Func callback) const {
+			tree.forEachLKP(callback);
+		}
 };
 
 
