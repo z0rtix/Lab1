@@ -14,11 +14,11 @@ class MemoryTracker {
 		static int activeCount;
 
 	public:
-		explicit MemoryTracker(int val = 0) : id(val) {
+		explicit MemoryTracker(int val = 0) noexcept : id(val) {
 			activeCount++;
 		}
 
-		MemoryTracker(const MemoryTracker& other) : id(other.id) {
+		MemoryTracker(const MemoryTracker& other) noexcept : id(other.id) {
 			activeCount++;
 		}
 
@@ -27,7 +27,7 @@ class MemoryTracker {
 			activeCount++;
 		}
 
-		MemoryTracker& operator=(const MemoryTracker& other) {
+		MemoryTracker& operator=(const MemoryTracker& other) noexcept {
 			if (this != &other) {
 				id = other.id;
 			}
@@ -42,7 +42,7 @@ class MemoryTracker {
 			return *this;
 		}
 
-		~MemoryTracker() {
+		~MemoryTracker() noexcept {
 			activeCount--;
 		}
 
@@ -55,16 +55,18 @@ class MemoryTracker {
 		}
 };
 
-
 int MemoryTracker::activeCount = 0;
 
-
-static void testEmptyAndSingleNode() {
+static void testEmptyAndDuplicates() {
 	AVLTree<int> tree;
 	assert(tree.empty() == true);
 	assert(tree.size() == 0);
 	assert(tree.contains(10) == false);
 	assert(tree.remove(10) == false);
+
+	int visited = 0;
+	tree.forEachLKP([&](int) { visited++; });
+	assert(visited == 0);
 
 	assert(tree.insert(10) == true);
 	assert(tree.empty() == false);
@@ -74,11 +76,19 @@ static void testEmptyAndSingleNode() {
 	assert(tree.insert(10) == false);
 	assert(tree.size() == 1);
 
-	assert(tree.remove(10) == true);
+	int rvalDup = 10;
+	assert(tree.insert(std::move(rvalDup)) == false);
+	assert(tree.size() == 1);
+
+	int rvalNew = 20;
+	assert(tree.insert(std::move(rvalNew)) == true);
+	assert(tree.size() == 2);
+
+	tree.clear();
 	assert(tree.empty() == true);
 	assert(tree.size() == 0);
 
-	std::cout << "\033[32m[✓]\033[0m Тест 1: Пустое дерево, одиночный узел и защита от дубликатов\n";
+	std::cout << "\033[32m[✓]\033[0m Тест 01: Граничные случаи пустого дерева, rvalue-вставка и дубликаты\n";
 }
 
 static void testAllRotations() {
@@ -118,10 +128,10 @@ static void testAllRotations() {
 	treeRL.forEachKLP([&](int x) { resRL[idx++] = x; });
 	assert(resRL[0] == 20 && resRL[1] == 10 && resRL[2] == 30);
 
-	std::cout << "\033[32m[✓]\033[0m Тест 2: Все 4 вида балансировки АВЛ (LL, RR, LR, RL)\n";
+	std::cout << "\033[32m[✓]\033[0m Тест 02: Все 4 вида балансировки АВЛ (повороты LL, RR, LR, RL)\n";
 }
 
-static void testRemoveCases() {
+static void testRemoveAllCases() {
 	AVLTree<int> tree;
 	int values[] = {50, 25, 75, 10, 30, 60, 90, 5, 65};
 	for (int i = 0; i < 9; i++) {
@@ -151,43 +161,50 @@ static void testRemoveCases() {
 	assert(tree.remove(999) == false);
 	assert(tree.size() == 5);
 
-	std::cout << "\033[32m[✓]\033[0m Тест 3: Удаление листа, узла с 1 и 2 потомками, удаление корня\n";
+	std::cout << "\033[32m[✓]\033[0m Тест 03: Удаление листа, узла с 1 и 2 потомками, удаление корня\n";
 }
 
-static void testTraversals() {
+static void testAllSixTraversals() {
 	AVLTree<int> tree;
-	tree.insert(20);
-	tree.insert(10);
-	tree.insert(30);
+	int items[] = {40, 20, 60, 10, 30, 50, 70};
+	for (int i = 0; i < 7; i++) {
+		tree.insert(items[i]);
+	}
 
-	int arr[3];
+	int buf[7];
 	int idx = 0;
 
+	int expKLP[] = {40, 20, 10, 30, 60, 50, 70};
 	idx = 0;
-	tree.forEachKLP([&](int x) { arr[idx++] = x; });
-	assert(arr[0] == 20 && arr[1] == 10 && arr[2] == 30);
+	tree.forEachKLP([&](int x) { buf[idx++] = x; });
+	for (int i = 0; i < 7; i++) assert(buf[i] == expKLP[i]);
 
+	int expKPL[] = {40, 60, 70, 50, 20, 30, 10};
 	idx = 0;
-	tree.forEachKPL([&](int x) { arr[idx++] = x; });
-	assert(arr[0] == 20 && arr[1] == 30 && arr[2] == 10);
+	tree.forEachKPL([&](int x) { buf[idx++] = x; });
+	for (int i = 0; i < 7; i++) assert(buf[i] == expKPL[i]);
 
+	int expLKP[] = {10, 20, 30, 40, 50, 60, 70};
 	idx = 0;
-	tree.forEachLKP([&](int x) { arr[idx++] = x; });
-	assert(arr[0] == 10 && arr[1] == 20 && arr[2] == 30);
+	tree.forEachLKP([&](int x) { buf[idx++] = x; });
+	for (int i = 0; i < 7; i++) assert(buf[i] == expLKP[i]);
 
+	int expLPK[] = {10, 30, 20, 50, 70, 60, 40};
 	idx = 0;
-	tree.forEachLPK([&](int x) { arr[idx++] = x; });
-	assert(arr[0] == 10 && arr[1] == 30 && arr[2] == 20);
+	tree.forEachLPK([&](int x) { buf[idx++] = x; });
+	for (int i = 0; i < 7; i++) assert(buf[i] == expLPK[i]);
 
+	int expPLK[] = {70, 50, 60, 30, 10, 20, 40};
 	idx = 0;
-	tree.forEachPLK([&](int x) { arr[idx++] = x; });
-	assert(arr[0] == 30 && arr[1] == 10 && arr[2] == 20);
+	tree.forEachPLK([&](int x) { buf[idx++] = x; });
+	for (int i = 0; i < 7; i++) assert(buf[i] == expPLK[i]);
 
+	int expPKL[] = {70, 60, 50, 40, 30, 20, 10};
 	idx = 0;
-	tree.forEachPKL([&](int x) { arr[idx++] = x; });
-	assert(arr[0] == 30 && arr[1] == 20 && arr[2] == 10);
+	tree.forEachPKL([&](int x) { buf[idx++] = x; });
+	for (int i = 0; i < 7; i++) assert(buf[i] == expPKL[i]);
 
-	std::cout << "\033[32m[✓]\033[0m Тест 4: Проверка всех 6 обходов (КЛП, КПЛ, ЛКП, ЛПК, ПЛК, ПКЛ)\n";
+	std::cout << "\033[32m[✓]\033[0m Тест 04: Точная проверка всех 6 обходов (КЛП, КПЛ, ЛКП, ЛПК, ПЛК, ПКЛ)\n";
 }
 
 static void testFunctionalMethods() {
@@ -211,10 +228,13 @@ static void testFunctionalMethods() {
 	int sum = tree.reduce([](int val, int acc) { return val + acc; }, 0);
 	assert(sum == 15);
 
-	std::cout << "\033[32m[✓]\033[0m Тест 5: Функциональные методы map, where, reduce\n";
+	int product = tree.reduce([](int val, int acc) { return val * acc; }, 1);
+	assert(product == 120);
+
+	std::cout << "\033[32m[✓]\033[0m Тест 05: Функциональные операции map, where, reduce\n";
 }
 
-static void testSubtrees() {
+static void testSubtreesAndEquality() {
 	AVLTree<int> tree;
 	tree.insert(40);
 	tree.insert(20);
@@ -229,34 +249,41 @@ static void testSubtrees() {
 	assert(sub.contains(30) == true);
 	assert(tree.containsSubtree(sub) == true);
 
-	sub.insert(99);
-	assert(tree.containsSubtree(sub) == false);
+	AVLTree<int> subCopy = sub;
+	assert(sub == subCopy);
+	subCopy.insert(99);
+	assert(sub != subCopy);
+	assert(tree.containsSubtree(subCopy) == false);
 
 	AVLTree<int> emptySub;
 	assert(tree.containsSubtree(emptySub) == true);
+	assert(emptySub.containsSubtree(sub) == false);
 
-	std::cout << "\033[32m[✓]\033[0m Тест 6: Извлечение поддерева и поиск поддерева\n";
+	std::cout << "\033[32m[✓]\033[0m Тест 06: Извлечение поддерева, поиск поддерева и операторы == / !=\n";
 }
 
-static void testCopyAndMove() {
+static void testRuleOfFiveAndSelfAssignment() {
 	AVLTree<int> t1;
 	t1.insert(10);
 	t1.insert(20);
 	t1.insert(30);
 
 	AVLTree<int> t2(t1);
-	assert(t2.size() == 3);
-	assert(t2.contains(20) == true);
-
+	assert(t2 == t1);
 	t2.insert(40);
-	assert(t2.size() == 4);
+	assert(t2 != t1);
 	assert(t1.size() == 3);
 
 	AVLTree<int> t3;
 	t3.insert(99);
 	t3 = t1;
-	assert(t3.size() == 3);
+	assert(t3 == t1);
 	assert(t3.contains(99) == false);
+
+	AVLTree<int>& selfRef = t3;
+	t3 = selfRef;
+	assert(t3.size() == 3);
+	assert(t3.contains(20) == true);
 
 	AVLTree<int> t4(std::move(t1));
 	assert(t4.size() == 3);
@@ -264,11 +291,17 @@ static void testCopyAndMove() {
 	assert(t1.size() == 0);
 
 	AVLTree<int> t5;
+	t5.insert(1);
 	t5 = std::move(t4);
 	assert(t5.size() == 3);
 	assert(t4.empty() == true);
 
-	std::cout << "\033[32m[✓]\033[0m Тест 7: Глубокое копирование и семантика перемещения (Rule of 5)\n";
+	AVLTree<int>& selfMoveRef = t5;
+	t5 = std::move(selfMoveRef);
+	assert(t5.size() == 3);
+	assert(t5.contains(10) == true);
+
+	std::cout << "\033[32m[✓]\033[0m Тест 07: Правило пяти (копирование, перемещение, самоприсваивание)\n";
 }
 
 static void testExceptions() {
@@ -290,18 +323,27 @@ static void testExceptions() {
 	}
 	assert(reduceThrown == true);
 
-	bool extractThrown = false;
+	bool extractEmptyThrown = false;
 	try {
 		emptyTree.extractSubtree(42);
 	} catch (const std::invalid_argument&) {
-		extractThrown = true;
+		extractEmptyThrown = true;
 	}
-	assert(extractThrown == true);
+	assert(extractEmptyThrown == true);
 
-	std::cout << "\033[32m[✓]\033[0m Тест 8: Перехват исключений на пустом дереве и неверном ключе\n";
+	emptyTree.insert(10);
+	bool extractMissingThrown = false;
+	try {
+		emptyTree.extractSubtree(999);
+	} catch (const std::invalid_argument&) {
+		extractMissingThrown = true;
+	}
+	assert(extractMissingThrown == true);
+
+	std::cout << "\033[32m[✓]\033[0m Тест 08: Перехват исключений (runtime_error, invalid_argument)\n";
 }
 
-static void testSetOperations() {
+static void testSetOperationsAndRuleOfFive() {
 	Set<int> a;
 	Set<int> b;
 
@@ -326,20 +368,35 @@ static void testSetOperations() {
 	assert(a.isSubsetOf(un) == true);
 	assert(un.isSubsetOf(a) == false);
 
-	std::cout << "\033[32m[✓]\033[0m Тест 9: Операции над множествами Set (объединение, пересечение, разность)\n";
+	Set<int> copyA(a);
+	assert(copyA == a);
+	copyA.remove(1);
+	assert(copyA != a);
+
+	Set<int> movedA(std::move(copyA));
+	assert(movedA.size() == 4);
+	assert(copyA.empty() == true);
+
+	int rvalSetItem = 100;
+	assert(movedA.insert(std::move(rvalSetItem)) == true);
+	assert(movedA.contains(100) == true);
+
+	std::cout << "\033[32m[✓]\033[0m Тест 09: Множество Set (объединение, пересечение, разность, Rule of 5)\n";
 }
 
 static void testStudentsAndTeachers() {
 	AVLTree<Student> students;
-	Student s1({10, 1}, "Ivan", "Ivanov", 4.8);
-	Student s2({10, 2}, "Petr", "Petrov", 3.5);
-	Student s3({9, 99}, "Anna", "Sidorova", 5.0);
+	Student s1(PersonID(10, 1), "Artem", "Tokovenko", 4.9);
+	Student s2(PersonID(10, 2), "Petr", "Petrov", 3.5);
+	Student s3(PersonID(9, 99), "Anna", "Sidorova", 5.0);
+	Student s1Dup(PersonID(10, 1), "Clone", "User", 2.0);
 
 	assert(students.insert(s1) == true);
 	assert(students.insert(s2) == true);
 	assert(students.insert(s3) == true);
-	assert(students.insert(s1) == false);
+	assert(students.insert(s1Dup) == false);
 	assert(students.size() == 3);
+	assert(students.contains(s1) == true);
 
 	AVLTree<Student> best = students.where([](const Student& s) {
 		return s.getGPA() >= 4.5;
@@ -347,14 +404,40 @@ static void testStudentsAndTeachers() {
 	assert(best.size() == 2);
 
 	AVLTree<Teacher> teachers;
-	Teacher t1({50, 1}, "Igor", "Sedykh", "Software Engineering");
+	Teacher t1(PersonID(50, 1), "Igor", "Sedykh", "Software Engineering");
+	Teacher t2(PersonID(50, 2), "Valery", "Roslovtsev", "Cybernetics");
 	assert(teachers.insert(t1) == true);
+	assert(teachers.insert(t2) == true);
 	assert(teachers.contains(t1) == true);
+	assert(teachers.remove(t1) == true);
+	assert(teachers.size() == 1);
 
-	std::cout << "\033[32m[✓]\033[0m Тест 10: Работа дерева с типами Student и Teacher по PersonID\n";
+	std::cout << "\033[32m[✓]\033[0m Тест 10: Работа дерева с типами Student и Teacher по ключу PersonID\n";
 }
 
-static void testStressAndMemoryLeaks() {
+static void testStressSequentialInsert() {
+	AVLTree<int> tree;
+	const int count = 1000;
+	for (int i = 1; i <= count; i++) {
+		assert(tree.insert(i) == true);
+	}
+	assert(tree.size() == static_cast<size_t>(count));
+
+	int prev = 0;
+	tree.forEachLKP([&](int val) {
+		assert(val > prev);
+		prev = val;
+	});
+
+	for (int i = 1; i <= count; i += 2) {
+		assert(tree.remove(i) == true);
+	}
+	assert(tree.size() == static_cast<size_t>(count / 2));
+
+	std::cout << "\033[32m[✓]\033[0m Тест 11: Стресс-тест на 1000 упорядоченных вставок и удалений\n";
+}
+
+static void testMemoryLeaksWithTracker() {
 	assert(MemoryTracker::getActiveCount() == 0);
 	{
 		AVLTree<MemoryTracker> tree;
@@ -367,38 +450,43 @@ static void testStressAndMemoryLeaks() {
 		AVLTree<MemoryTracker> copy = tree;
 		assert(MemoryTracker::getActiveCount() == 1000);
 
+		AVLTree<MemoryTracker> moved = std::move(tree);
+		assert(MemoryTracker::getActiveCount() == 1000);
+		assert(tree.empty() == true);
+
 		for (int i = 0; i < 250; i++) {
-			tree.remove(MemoryTracker(i));
+			copy.remove(MemoryTracker(i));
 		}
-		assert(tree.size() == 250);
+		assert(copy.size() == 250);
 		assert(MemoryTracker::getActiveCount() == 750);
 
-		tree.clear();
+		copy.clear();
 		assert(MemoryTracker::getActiveCount() == 500);
 	}
 	assert(MemoryTracker::getActiveCount() == 0);
 
-	std::cout << "\033[32m[✓]\033[0m Тест 11: Стресс-тест на 500 элементов и проверка отсутствия утечек (0 leaks)\n";
+	std::cout << "\033[32m[✓]\033[0m Тест 12: Контроль памяти MemoryTracker (0 утечек, активных объектов: 0)\n";
 }
 
 
 void runAllTests() {
-	std::cout << "\n======================================================\n";
-	std::cout << "               ЗАПУСК МОДУЛЬНЫХ ТЕСТОВ                \n";
-	std::cout << "======================================================\n";
+	std::cout << "\n\033[36m======================================================================\033[0m\n";
+	std::cout << "\033[36m                  ЗАПУСК МОДУЛЬНЫХ ТЕСТОВ (12 БЛОКОВ)                 \033[0m\n";
+	std::cout << "\033[36m======================================================================\033[0m\n";
 
-	testEmptyAndSingleNode();
+	testEmptyAndDuplicates();
 	testAllRotations();
-	testRemoveCases();
-	testTraversals();
+	testRemoveAllCases();
+	testAllSixTraversals();
 	testFunctionalMethods();
-	testSubtrees();
-	testCopyAndMove();
+	testSubtreesAndEquality();
+	testRuleOfFiveAndSelfAssignment();
 	testExceptions();
-	testSetOperations();
+	testSetOperationsAndRuleOfFive();
 	testStudentsAndTeachers();
-	testStressAndMemoryLeaks();
+	testStressSequentialInsert();
+	testMemoryLeaksWithTracker();
 
-	std::cout << "------------------------------------------------------\n";
-	std::cout << "\033[32mВсе 11 блоков тестирования успешно пройдены!\033[0m\n\n";
+	std::cout << "\033[36m----------------------------------------------------------------------\033[0m\n";
+	std::cout << "\033[32m[УСПЕХ] Все 12 блоков тестирования пройдены без единой ошибки!\033[0m\n\n";
 }

@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <utility>
 
+
 template <typename T>
 class AVLTree {
 	private:
@@ -165,25 +166,20 @@ class AVLTree {
 			return balance(node);
 		}
 
-        void destroyTree(Node* node) const noexcept {
-            if (node) {
-                destroyTree(node->left);
-                destroyTree(node->right);
-                delete node;
-            }
-        }
+		void destroyTree(Node* node) noexcept {
+			if (node) {
+				destroyTree(node->left);
+				destroyTree(node->right);
+				delete node;
+			}
+		}
 
 		Node* copyTree(Node* node) const {
 			if (!node) return nullptr;
 			Node* newNode = new Node(node->value);
 			newNode->height = node->height;
-			try {
-				newNode->left = copyTree(node->left);
-				newNode->right = copyTree(node->right);
-			} catch (...) {
-				destroyTree(newNode);
-				throw;
-			}
+			newNode->left = copyTree(node->left);
+			newNode->right = copyTree(node->right);
 			return newNode;
 		}
 
@@ -265,11 +261,13 @@ class AVLTree {
 			traversePKL(node->left, callback);
 		}
 
-		void printHelper(Node* node, const std::string& prefix, bool isLeft) const {
+        void printHelper(Node* node, const std::string& prefix, bool isLeft) const {
 			if (!node) return;
 			printHelper(node->right, prefix + (isLeft ? "│   " : "    "), false);
-			std::cout << prefix << (isLeft ? "└── " : "┌── ") << node->value << " (h=" << node->height << ")\n";
-			printHelper(node->left, prefix + (isLeft ? "│   " : "    "), true);
+			std::cout << prefix << (isLeft ? "└── " : "┌── ")
+			          << "\033[32m" << node->value << "\033[0m"
+			          << " (h=" << node->height << ")\n";
+			printHelper(node->left, prefix + (isLeft ? "    " : "│   "), true);
 		}
 
 	public:
@@ -284,9 +282,8 @@ class AVLTree {
 
 		AVLTree& operator=(const AVLTree& other) {
 			if (this != &other) {
-				Node* newRoot = copyTree(other.root);
 				clear();
-				root = newRoot;
+				root = copyTree(other.root);
 				treeSize = other.treeSize;
 			}
 			return *this;
@@ -344,6 +341,15 @@ class AVLTree {
 			destroyTree(root);
 			root = nullptr;
 			treeSize = 0;
+		}
+
+		bool operator==(const AVLTree<T>& other) const noexcept {
+			if (treeSize != other.treeSize) return false;
+			return areEqualTrees(root, other.root);
+		}
+
+		bool operator!=(const AVLTree<T>& other) const noexcept {
+			return !(*this == other);
 		}
 
 		template <typename Func>
@@ -410,13 +416,14 @@ class AVLTree {
 
 		void print() const {
 			if (!root) {
-				std::cout << "[Дерево пусто]\n";
+				std::cout << "\033[33m[Дерево пусто]\033[0m\n";
 				return;
 			}
 			printHelper(root->right, "", false);
-			std::cout << root->value << " (h=" << root->height << ")\n";
+			std::cout << "\033[32m" << root->value << "\033[0m (h=" << root->height << ") [КОРЕНЬ]\n";
 			printHelper(root->left, "", true);
 		}
 };
+
 
 #endif

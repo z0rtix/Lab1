@@ -100,9 +100,22 @@ class Set {
 			return isSub;
 		}
 
+		bool operator==(const Set<T>& other) const noexcept {
+			if (size() != other.size()) return false;
+			return isSubsetOf(other);
+		}
+
+		bool operator!=(const Set<T>& other) const noexcept {
+			return !(*this == other);
+		}
+
 		template <typename Func>
 		void forEach(Func callback) const {
 			tree.forEachLKP(callback);
+		}
+
+		void print() const {
+			tree.print();
 		}
 };
 

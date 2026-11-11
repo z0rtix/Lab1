@@ -26,23 +26,47 @@ static int readInt(const char* prompt) {
 	}
 }
 
-static void demoStudents() {
-	std::cout << "\n--- Демонстрация дерева студентов (Student) ---\n";
-	AVLTree<Student> students;
-	students.insert(Student({101, 1}, "Alexey", "Smirnov", 4.2));
-	students.insert(Student({101, 2}, "Maria", "Kuznetsova", 4.9));
-	students.insert(Student({101, 3}, "Dmitry", "Popov", 3.5));
-	students.insert(Student({101, 4}, "Elena", "Sokolova", 4.7));
+static void demoRotations() {
+	std::cout << "\n\033[36m--- Наглядная демонстрация 4 видов поворотов АВЛ ---\033[0m\n";
 
-	std::cout << "Все студенты (обход ЛКП по возрастанию ID):\n";
+	std::cout << "\n1. Малый левый поворот (RR): вставка 10 -> 20 -> 30\n";
+	AVLTree<int> rr;
+	rr.insert(10); rr.insert(20); rr.insert(30);
+	rr.print();
+
+	std::cout << "\n2. Малый правый поворот (LL): вставка 30 -> 20 -> 10\n";
+	AVLTree<int> ll;
+	ll.insert(30); ll.insert(20); ll.insert(10);
+	ll.print();
+
+	std::cout << "\n3. Большой лево-правый поворот (LR): вставка 30 -> 10 -> 20\n";
+	AVLTree<int> lr;
+	lr.insert(30); lr.insert(10); lr.insert(20);
+	lr.print();
+
+	std::cout << "\n4. Большой право-левый поворот (RL): вставка 10 -> 30 -> 20\n";
+	AVLTree<int> rl;
+	rl.insert(10); rl.insert(30); rl.insert(20);
+	rl.print();
+}
+
+static void demoStudents() {
+	std::cout << "\n\033[36m--- Демонстрация дерева студентов и преподавателей ---\033[0m\n";
+	AVLTree<Student> students;
+	students.insert(Student(PersonID(101, 1), "Alexey", "Smirnov", 4.2));
+	students.insert(Student(PersonID(101, 2), "Maria", "Kuznetsova", 4.9));
+	students.insert(Student(PersonID(101, 3), "Dmitry", "Popov", 3.5));
+	students.insert(Student(PersonID(101, 4), "Elena", "Sokolova", 4.7));
+
+	std::cout << "Все студенты (обход ЛКП по возрастанию PersonID):\n";
 	students.forEachLKP([](const Student& s) {
 		std::cout << "  " << s << "\n";
 	});
 
-	std::cout << "\nСтруктура дерева студентов:\n";
+	std::cout << "\nГрафическая структура дерева студентов:\n";
 	students.print();
 
-	std::cout << "\nСтуденты с баллом >= 4.5 (метод where):\n";
+	std::cout << "\nОтличники с баллом >= 4.5 (метод where):\n";
 	AVLTree<Student> honors = students.where([](const Student& s) {
 		return s.getGPA() >= 4.5;
 	});
@@ -52,7 +76,7 @@ static void demoStudents() {
 }
 
 static void demoSets() {
-	std::cout << "\n--- Демонстрация операций над множествами (Set) ---\n";
+	std::cout << "\n\033[36m--- Демонстрация операций над множествами (Set) ---\033[0m\n";
 	Set<int> a;
 	Set<int> b;
 
@@ -77,6 +101,9 @@ static void demoSets() {
 	std::cout << "}\nРазность    (A \\ B): { ";
 	diff.forEach([](int x) { std::cout << x << " "; });
 	std::cout << "}\n";
+
+	std::cout << "\nСтруктура АВЛ-дерева для объединения множеств:\n";
+	un.print();
 }
 
 
@@ -84,21 +111,25 @@ void runMenu() {
 	AVLTree<int> tree;
 
 	while (true) {
-		std::cout << "\n================ МЕНЮ (АВЛ-ДЕРЕВО) ================\n";
+		std::cout << "\n\033[36m================ МЕНЮ (АВЛ-ДЕРЕВО И МНОЖЕСТВА) ================\033[0m\n";
+		std::cout << "Элементов в текущем дереве: " << tree.size() << "\n";
+		std::cout << "---------------------------------------------------------------\n";
 		std::cout << " 1. Вставить число в дерево\n";
-		std::cout << " 2. Заполнить дерево готовым набором (10 чисел)\n";
-		std::cout << " 3. Удалить число из дерева\n";
-		std::cout << " 4. Проверить наличие числа (contains)\n";
-		std::cout << " 5. Показать дерево (графика) и все 6 обходов\n";
-		std::cout << " 6. Проверить map (x * 2), where (четные) и reduce (сумма)\n";
-		std::cout << " 7. Извлечь поддерево по узлу и проверить вхождение\n";
-		std::cout << " 8. Очистить дерево\n";
-		std::cout << " 9. Демонстрация работы со студентами (Student)\n";
-		std::cout << "10. Демонстрация работы с множествами (Set)\n";
-		std::cout << "11. Запустить модульные тесты\n";
-		std::cout << "12. Запустить бенчмарк (замеры времени)\n";
+		std::cout << " 2. Заполнить дерево готовым сбалансированным набором (10 чисел)\n";
+		std::cout << " 3. Заполнить числами 1..15 по возрастанию (проверка баланса)\n";
+		std::cout << " 4. Удалить число из дерева\n";
+		std::cout << " 5. Проверить наличие числа (contains)\n";
+		std::cout << " 6. Показать дерево (графика) и все 6 обходов\n";
+		std::cout << " 7. Выполнить map, where и reduce на текущем дереве\n";
+		std::cout << " 8. Извлечь поддерево по узлу и проверить вхождение\n";
+		std::cout << " 9. Показать демонстрацию всех 4 поворотов АВЛ (LL, RR, LR, RL)\n";
+		std::cout << "10. Демонстрация работы со студентами (Student / PersonID)\n";
+		std::cout << "11. Демонстрация работы с множествами (Set)\n";
+		std::cout << "12. Очистить текущее дерево\n";
+		std::cout << "13. Запустить модульные тесты (12 блоков)\n";
+		std::cout << "14. Запустить бенчмарк (таблица замеров времени)\n";
 		std::cout << " 0. Выход\n";
-		std::cout << "---------------------------------------------------\n";
+		std::cout << "---------------------------------------------------------------\n";
 
 		int choice = readInt("Выберите пункт: ");
 
@@ -111,20 +142,26 @@ void runMenu() {
 			else std::cout << "\033[33mТакой элемент уже есть в дереве.\033[0m\n";
 			tree.print();
 		} else if (choice == 2) {
+			tree.clear();
 			int preset[] = {50, 25, 75, 10, 30, 60, 90, 5, 15, 65};
 			for (int i = 0; i < 10; i++) tree.insert(preset[i]);
-			std::cout << "\033[32mДобавлен набор из 10 элементов:\033[0m\n";
+			std::cout << "\033[32mЗагружен набор из 10 элементов:\033[0m\n";
 			tree.print();
 		} else if (choice == 3) {
+			tree.clear();
+			for (int i = 1; i <= 15; i++) tree.insert(i);
+			std::cout << "\033[32mВставлены числа 1..15 по порядку:\033[0m\n";
+			tree.print();
+		} else if (choice == 4) {
 			int x = readInt("Введите число для удаления: ");
 			if (tree.remove(x)) std::cout << "\033[32mЭлемент удален.\033[0m\n";
 			else std::cout << "\033[31mЭлемент не найден.\033[0m\n";
 			tree.print();
-		} else if (choice == 4) {
+		} else if (choice == 5) {
 			int x = readInt("Введите число для поиска: ");
 			if (tree.contains(x)) std::cout << "\033[32mЭлемент НАЙДЕН в дереве.\033[0m\n";
 			else std::cout << "\033[31mЭлемент НЕ найден.\033[0m\n";
-		} else if (choice == 5) {
+		} else if (choice == 6) {
 			std::cout << "\nГрафическая структура дерева (корень слева):\n";
 			tree.print();
 			if (!tree.empty()) {
@@ -142,22 +179,23 @@ void runMenu() {
 				tree.forEachPLK([](int x) { std::cout << x << " "; });
 				std::cout << "\nВсего элементов: " << tree.size() << "\n";
 			}
-		} else if (choice == 6) {
+		} else if (choice == 7) {
 			if (tree.empty()) {
-				std::cout << "\033[31mДерево пусто! Сначала добавьте элементы.\033[0m\n";
+				std::cout << "\033[31mДерево пусто! Сначала добавьте элементы (пункт 2 или 3).\033[0m\n";
 			} else {
-				AVLTree<int> mapped = tree.map([](int x) { return x * 2; });
-				std::cout << "После map (умножение на 2): ";
-				mapped.forEachLKP([](int x) { std::cout << x << " "; });
+				int factor = readInt("На какое число умножить элементы в map? ");
+				AVLTree<int> mapped = tree.map([factor](int x) { return x * factor; });
+				std::cout << "\nПосле map (умножение на " << factor << "):\n";
+				mapped.print();
 
 				AVLTree<int> evens = tree.where([](int x) { return x % 2 == 0; });
-				std::cout << "\nПосле where (только четные): ";
+				std::cout << "\nПосле where (только четные элементы): ";
 				evens.forEachLKP([](int x) { std::cout << x << " "; });
 
 				int sum = tree.reduce([](int val, int acc) { return val + acc; }, 0);
-				std::cout << "\nСумма элементов (reduce): " << sum << "\n";
+				std::cout << "\nСумма всех элементов (reduce): " << sum << "\n";
 			}
-		} else if (choice == 7) {
+		} else if (choice == 8) {
 			if (tree.empty()) {
 				std::cout << "\033[31mДерево пусто!\033[0m\n";
 			} else {
@@ -172,16 +210,18 @@ void runMenu() {
 					std::cout << "\033[31mОшибка: " << e.what() << "\033[0m\n";
 				}
 			}
-		} else if (choice == 8) {
+		} else if (choice == 9) {
+			demoRotations();
+		} else if (choice == 10) {
+			demoStudents();
+		} else if (choice == 11) {
+			demoSets();
+		} else if (choice == 12) {
 			tree.clear();
 			std::cout << "\033[32mДерево очищено.\033[0m\n";
-		} else if (choice == 9) {
-			demoStudents();
-		} else if (choice == 10) {
-			demoSets();
-		} else if (choice == 11) {
+		} else if (choice == 13) {
 			runAllTests();
-		} else if (choice == 12) {
+		} else if (choice == 14) {
 			runBenchmarks();
 		} else {
 			std::cout << "\033[31mНеверный пункт меню.\033[0m\n";

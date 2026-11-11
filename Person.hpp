@@ -9,7 +9,7 @@ struct PersonID {
 	int series;
 	int number;
 
-	PersonID(int s = 0, int n = 0) noexcept : series(s), number(n) {}
+	explicit PersonID(int s = 0, int n = 0) noexcept : series(s), number(n) {}
 
 	bool operator<(const PersonID& other) const noexcept {
 		if (series != other.series) {
@@ -36,10 +36,10 @@ class Student {
 		double gpa;
 
 	public:
-		Student(PersonID personId = PersonID(0, 0),
-		        const std::string& fName = "",
-		        const std::string& lName = "",
-		        double grade = 0.0)
+		explicit Student(const PersonID& personId = PersonID(0, 0),
+		                 const std::string& fName = "",
+		                 const std::string& lName = "",
+		                 double grade = 0.0)
 		    : id(personId), firstName(fName), lastName(lName), gpa(grade) {}
 
 		PersonID getID() const noexcept { return id; }
@@ -75,11 +75,9 @@ class Teacher {
 		std::string department;
 
 	public:
-		Teacher(PersonID personId = PersonID(0, 0),
-		        const std::string& fName = "",
-		        const std::string& lName = "",
-		        const std::string& dept = "")
-		    : id(personId), firstName(fName), lastName(lName), department(dept) {}
+		explicit Teacher(const PersonID& personId = PersonID(0, 0), const std::string& fName = "",
+		                 const std::string& lName = "", const std::string& dept = "")
+						 : id(personId), firstName(fName), lastName(lName), department(dept) {}
 
 		PersonID getID() const noexcept { return id; }
 
